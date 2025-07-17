@@ -44,10 +44,10 @@ def generate_data():
         signups_last_30d=('signups_last_30d', 'sum'),
         events_created_last_30d=('events_created_last_30d', 'sum')
     ).reset_index()
-    campus_df['growth_mom'] = np.random.uniform(-0.1, 0.25, len(campus_df))
+    # Generate realistic percentage numbers for growth
+    campus_df['growth_mom'] = np.random.uniform(-10.0, 25.0, len(campus_df))
     campus_df = campus_df.sort_values("signups_last_30d", ascending=False)
     
-    # --- FIXED SECTION ---
     # Create Activity Log
     activities = [
         "just onboarded a new organization:", "created a new event:", "hit their monthly sign-up bonus!",
@@ -61,12 +61,10 @@ def generate_data():
         activity = np.random.choice(activities)
         
         log_entry = f"- {rep_name} ({university}) {activity}"
-        # If the activity is about onboarding, add a random org name
         if "onboarded" in activity:
             log_entry += f" {np.random.choice(onboarded_orgs)}"
         
         activity_log.append(log_entry)
-    # --- END OF FIX ---
 
     # Create Funnel Data
     funnel_data = {
@@ -84,7 +82,7 @@ def generate_data():
 
     return reps_df, campus_df, activity_log, funnel_data, map_df
 
-# --- This line calls the function and creates all the necessary variables ---
+# --- Call the function to create all the necessary variables ---
 reps_df, campus_df, activity_log, funnel_data, map_df = generate_data()
 
 # --- National Performance Overview (KPI Cards) ---
@@ -116,7 +114,7 @@ with col1:
             "signups_last_30d": "Sign-ups (30d)",
             "events_created_last_30d": "Events (30d)",
             "growth_mom": st.column_config.ProgressColumn(
-                "Growth (MoM)", format="%.1f%%", min_value=-20, max_value=30
+                "Growth (MoM)", format="%.1f%%", min_value=-25, max_value=25
             ),
         },
         use_container_width=True,
@@ -156,29 +154,26 @@ st.markdown("---")
 # --- Interactive Map View ---
 st.subheader("Program Footprint")
 
-# Create the interactive map figure using Plotly Express
 fig = px.scatter_mapbox(
     map_df,
     lat="lat",
     lon="lon",
-    size="signups_last_30d",       # Dot size based on sign-ups
-    hover_name="university",      # Show university name on hover
-    hover_data={                  # Define what other data to show on hover
+    size="signups_last_30d",
+    hover_name="university",
+    hover_data={
         "signups_last_30d": True,
-        "lat": False, # Hide latitude
-        "lon": False, # Hide longitude
+        "lat": False,
+        "lon": False,
     },
-    color_discrete_sequence=["#FF4B4B"], # Use Streamlit's red color
+    color_discrete_sequence=["#FF4B4B"],
     zoom=3,
     height=500
 )
 
-# Update the map style and layout
 fig.update_layout(
-    mapbox_style="carto-positron", # A clean, light map style
+    mapbox_style="carto-positron",
     margin={"r":0,"t":0,"l":0,"b":0}
 )
 
-# Display the interactive map in Streamlit
 st.plotly_chart(fig, use_container_width=True)
 st.caption("Hover over a dot to see university details. Dot size represents sign-ups in the last 30 days.")
